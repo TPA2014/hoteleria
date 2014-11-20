@@ -69,11 +69,11 @@ $(function() {
             $.mobile.paramsHandler.addPage(
                 'mapa',                  // ID de la página
                 ['id'],                  // Parámetros obligatorios
-                [],                      // Parámetros opcionales
+                ['ruta'],                // Parámetros opcionales
 
                 // Función callback a ejecutar antes de mostrar la página
                 function (urlParams) {
-                    app.crearMapa(urlParams.id);
+                    app.crearMapa(urlParams.id, urlParams.ruta);
                 }
             );
 
@@ -213,7 +213,8 @@ $(function() {
                     }
 
                     //if (hotel.latitud && hotel.longitud) {
-                        botones += '<a href="#mapa?id=' + hotel.id + '" class="ui-btn ui-corner-all">Cómo llegar</a>';
+                        botones += '<a href="#mapa?id=' + hotel.id + '" class="ui-btn ui-corner-all">Ver ubicación</a>';
+                        botones += '<a href="#mapa?id=' + hotel.id + '&ruta=1" class="ui-btn ui-corner-all">Cómo llegar</a>';
                         //$('#botonesFicha').controlgroup('container').append('<a href="#mapa?id=0" class="ui-btn ui-corner-all">Cómo llegar</a>');
                         //$('#botonesFicha').enhanceWithin().controlgroup('refresh');
                     //}
@@ -247,25 +248,51 @@ $(function() {
             });
         };
         
-        app.crearMapa = function(id_hotel) {
+        app.crearMapa = function(id_hotel, ruta) {
+            var ubicacionHotel = new google.maps.LatLng(
+                                     - 32.8908921,
+                                     - 68.8426071
+                                 );
+
             var mapOptions = {
-                center: new google.maps.LatLng(
-                            - 32.8908921,
-                            - 68.8426071
-                        ),
+                center: ubicacionHotel,
                 zoom: 15,
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             };
             var map = new google.maps.Map(document.getElementById("mapaCanvas"), mapOptions);
-            var companyPos = new google.maps.LatLng(
-                                 - 32.8908921,
-                                 - 68.8426071
-                             );
-            var companyMarker = new google.maps.Marker({
-                                    position: companyPos,
+            var marcadorHotel = new google.maps.Marker({
+                                    position: ubicacionHotel,
                                     map: map,
-                                    title:" "
+                                    title: 'Hotel'
                                 });
+
+            if (ruta && navigator.geolocation) {
+                function success(pos) {
+                    var ubicacionUsuario = new google.maps.LatLng(
+                                               pos.coords.latitude,
+                                               pos.coords.longitude
+                                           );
+                    var marcadorUsuario = new google.maps.Marker({
+                                              position: ubicacionUsuario,
+                                              map: map,
+                                              title: 'Usted se encuentra aquí'
+                                          });
+                }
+
+                function fail(error) {
+                    swal({
+                        title: 'Error de conexión',
+                        text: 'No se pudo obtener su ubicación geográfica.',
+                        type: 'warning'
+                    });
+                }
+
+                navigator.geolocation.getCurrentPosition(success, fail, {
+                    maximumAge: 500000,
+                    enableHighAccuracy: true,
+                    timeout: 6000
+                });
+            }
         };
 
         app.limpiarSlider = function() {
