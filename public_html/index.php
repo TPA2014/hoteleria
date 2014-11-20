@@ -86,8 +86,8 @@
             <div class="ui-content" role="main" id="fichaHotel">
                 <div id="cabeceraFicha">
                 </div>
-                <!--<div data-role="collapsible-set" id="infoFicha">'
-                </div>-->
+                <div data-role="collapsible-set" id="infoFicha">'
+                </div>
                 <div data-role="controlgroup" id="botonesFicha">'
                 </div>
                 <div id="galeria" class="owl-carousel">

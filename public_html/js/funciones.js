@@ -240,10 +240,10 @@ $(function() {
                     });
         
                     $('#cabeceraFicha').html(cabecera);
+                    $('#botonesFicha').html(botones);
                     if (info) {
                         $('#infoFicha').html(info).collapsibleset('refresh');
                     }
-                    $('#botonesFicha').html(botones);
                 }
             });
         };
