@@ -15,7 +15,7 @@
         <script src="js/libs/jquery-mobile-paramsHandler/jquery.mobile.paramsHandler-1.4.2.js"></script>
         <script src="js/libs/sweetalert/sweet-alert.min.js"></script>
         <script src="js/libs/owl-carousel/owl.carousel.min.js"></script>
-        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js"></script>
+        <script src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
         <script src="js/funciones.js"></script>
     </head>
     

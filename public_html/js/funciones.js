@@ -69,11 +69,11 @@ $(function() {
             $.mobile.paramsHandler.addPage(
                 'mapa',                  // ID de la página
                 ['id'],                  // Parámetros obligatorios
-                ['ruta'],                // Parámetros opcionales
+                [],                      // Parámetros opcionales
 
                 // Función callback a ejecutar antes de mostrar la página
                 function (urlParams) {
-                    app.crearMapa(urlParams.id, urlParams.ruta);
+                    app.crearMapa(urlParams.id);
                 }
             );
 
@@ -212,12 +212,7 @@ $(function() {
                                 '</div>';
                     }
 
-                    //if (hotel.latitud && hotel.longitud) {
-                        botones += '<a href="#mapa?id=' + hotel.id + '" class="ui-btn ui-corner-all">Ver ubicación</a>';
-                        botones += '<a href="#mapa?id=' + hotel.id + '&ruta=1" class="ui-btn ui-corner-all">Cómo llegar</a>';
-                        //$('#botonesFicha').controlgroup('container').append('<a href="#mapa?id=0" class="ui-btn ui-corner-all">Cómo llegar</a>');
-                        //$('#botonesFicha').enhanceWithin().controlgroup('refresh');
-                    //}
+                    botones += '<a href="#mapa?id=' + hotel.id + '" class="ui-btn ui-corner-all">Ver ubicación</a>';
                     
                     var directorio = hotel.directorio_galeria;
                     var extensionArchivo = '.jpg';
@@ -248,51 +243,79 @@ $(function() {
             });
         };
         
-        app.crearMapa = function(id_hotel, ruta) {
-            var ubicacionHotel = new google.maps.LatLng(
-                                     - 32.8908921,
-                                     - 68.8426071
-                                 );
+        app.crearMapa = function(id_hotel) {
+            var hotel = null;
+            var map = null;
+            var centroMapa = new google.maps.LatLng(
+                                 -32.8887817,
+                                 -68.8463026
+                             );
 
-            var mapOptions = {
-                center: ubicacionHotel,
-                zoom: 15,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            };
-            var map = new google.maps.Map(document.getElementById("mapaCanvas"), mapOptions);
-            var marcadorHotel = new google.maps.Marker({
-                                    position: ubicacionHotel,
-                                    map: map,
-                                    title: 'Hotel'
+            function obtenerHotel(id) {
+                $.ajax({
+                    url: 'json/hoteles.json',
+                    async: false,
+                    dataType: 'json',
+                    success: function(data) {
+                        $.each(data, function(index, item) {
+                            if (item.id == id_hotel) {
+                                hotel = item;
+                                return false;
+                            }
+                        });
+                    }
+                });
+
+                var solicitudBusquedaLugar = {
+                    // Límite de búsqueda: Provincia de Mendoza
+                    bounds: new google.maps.LatLngBounds(
+                                new google.maps.LatLng(-32.212801,-67.609863),
+                                new google.maps.LatLng(-37.195331,-69.433594)
+                            ),
+                    query: 'Hotel ' + hotel.nombre + ', Mendoza'
+                };
+
+                var service = new google.maps.places.PlacesService(map);
+                service.textSearch(solicitudBusquedaLugar, function(results, status) {
+                    if (status == google.maps.places.PlacesServiceStatus.OK) {
+                        var placeHotel = results[0];
+
+                        var solicitudDetalleLugar = {
+                            reference: placeHotel.reference
+                        }
+
+                        var infowindow = new google.maps.InfoWindow();
+                        service.getDetails(solicitudDetalleLugar, function(place, status) {
+                            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                                var marcadorHotel = new google.maps.Marker({
+                                                        map: map,
+                                                        position: place.geometry.location,
+                                                        icon: 'img/iconos/marcador_hotel.png'
+                                                    });
+                                google.maps.event.addListener(marcadorHotel, 'click', function() {
+                                    infowindow.setContent(place.name);
+                                    infowindow.open(map, this);
                                 });
 
-            if (ruta && navigator.geolocation) {
-                function success(pos) {
-                    var ubicacionUsuario = new google.maps.LatLng(
-                                               pos.coords.latitude,
-                                               pos.coords.longitude
-                                           );
-                    var marcadorUsuario = new google.maps.Marker({
-                                              position: ubicacionUsuario,
-                                              map: map,
-                                              title: 'Usted se encuentra aquí'
-                                          });
-                }
-
-                function fail(error) {
-                    swal({
-                        title: 'Error de conexión',
-                        text: 'No se pudo obtener su ubicación geográfica.',
-                        type: 'warning'
-                    });
-                }
-
-                navigator.geolocation.getCurrentPosition(success, fail, {
-                    maximumAge: 500000,
-                    enableHighAccuracy: true,
-                    timeout: 6000
+                                map.setCenter(marcadorHotel.getPosition());
+                            }
+                        });
+                    }
                 });
             }
+
+            function generarMapa(centro) {
+                var mapOptions = {
+                    center: centro,
+                    zoom: 18,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+
+                map = new google.maps.Map(document.getElementById("mapaCanvas"), mapOptions);
+            }
+
+            generarMapa(centroMapa);
+            obtenerHotel(id_hotel);
         };
 
         app.limpiarSlider = function() {
