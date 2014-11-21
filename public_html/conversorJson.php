@@ -12,7 +12,9 @@
         }
         
         $json_file = fopen($json_path, "w")
-                     or die ("Problemas en la creación.");
+                     or die ("El archivo JSON " + $json_file + " no ha " +
+                             "podido ser abierto en modo de escritura.\n" +
+                             "Por favor, compruebe los permisos del mismo.");
         
         fputs($json_file, json_encode($data, JSON_UNESCAPED_UNICODE));
         
